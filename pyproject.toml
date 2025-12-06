@@ -1,5 +1,27 @@
 [project]
 name = "sshd-cli"
 version = "0.1.0"
+description = "A Python TUI tool to manage personal SSHD sessions on remote VMs, enabling VS Code Remote Development when system SSH restricts port forwarding. "
+readme = "README.md"
+authors = [
+    { name = "SeshuTarapatla", email = "seshu.tarapatla@gmail.com" }
+]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "rich>=14.2.0",
+    "textual>=6.7.1",
+]
+
+[project.scripts]
+sshd-cli = "sshd_cli:main"
+
+[build-system]
+requires = ["uv_build>=0.9.15,<0.10.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "icecream>=2.1.8",
+    "ipykernel>=7.1.0",
+    "ipywidgets>=8.1.8",
+]
