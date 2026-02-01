@@ -1,10 +1,11 @@
 from send2trash import send2trash
 from sshconf import read_ssh_config
 
+from sshd_cli.controllers.code import Code
 from sshd_cli.controllers.rsa import generate_rsa_key_pair
-from sshd_cli.models.exceptions import AliasAlreadyExists, InvalidAlias
+from sshd_cli.models.exceptions import AliasAlreadyExists, CodeNotFound, InvalidAlias
 from sshd_cli.utils.logger import log
-from sshd_cli.vars import CLI_PREFIX, SSH_CONFIG, SSH_DIR, SSH_KEY, SSH_PUB
+from sshd_cli.vars import CLI_PREFIX, CODE, SSH_CONFIG, SSH_DIR, SSH_KEY, SSH_PUB
 
 
 class SSH:
@@ -45,11 +46,9 @@ class SSH:
         return alias in self._conf.hosts()
 
     def connect(self, alias: str = ""):
-        self = SSH() if self is None else self
-        if not self.exists(alias):
-            InvalidAlias.err_msg(alias=alias)
-
-        self._check_rsa_keypair()
+        self.alias = alias
+        self._client_setup()
+        self._remote_setup()
 
     # private functions
     def _ssh_init(self):
@@ -105,6 +104,13 @@ class SSH:
         )
         SSH_CONFIG.write_text(formatted_data)
 
+    def _check_host(self):
+        if not self.exists(self.alias):
+            InvalidAlias.err_msg(alias=self.alias, log=True)
+    
+    def _check_code(self):
+        Code().ensure_setup()
+
     def _check_rsa_keypair(self):
         if not any((SSH_KEY.exists(), SSH_PUB.exists())):
             log.error("RSA key pair missing. Generating a new pair...")
@@ -117,6 +123,13 @@ class SSH:
             log.info(
                 f"RSA key pair found at: [bright_blue]{SSH_KEY}[/] and [bright_blue]{SSH_PUB}[/]."
             )
+
+    def _client_setup(self):
+        self._check_host()
+        self._check_code()
+        self._check_rsa_keypair()
+
+    def _remote_setup(self): ...
 
 
 class RemoteSession: ...

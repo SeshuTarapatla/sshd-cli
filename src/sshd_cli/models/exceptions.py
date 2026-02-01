@@ -16,6 +16,7 @@ class ExitCode:
     INVALID_RESPONSE = 9
     SSH_KEYGEN_MISSING = 10
     SSH_KEYGEN_ERROR = 11
+    CODE_NOT_FOUND = 12
 
 
 class CliException(Exception):
@@ -143,6 +144,16 @@ class KeyPairGenerateError(CliException, RuntimeError):
     def err_msg(
         msg: str = "Failed to generate a rsa keypair. Cannot proceed further.",
         code: int = ExitCode.SSH_KEYGEN_ERROR,
+        log: bool = False,
+    ) -> NoReturn:
+        return CliException.err_msg(msg, code, log)
+
+
+class CodeNotFound(CliException, FileNotFoundError):
+    @staticmethod
+    def err_msg(
+        msg: str = "Visual Studio Code not found in the PATH.",
+        code: int = ExitCode.CODE_NOT_FOUND,
         log: bool = False,
     ) -> NoReturn:
         return CliException.err_msg(msg, code, log)
