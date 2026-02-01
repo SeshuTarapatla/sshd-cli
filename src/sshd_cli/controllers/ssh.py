@@ -1,7 +1,10 @@
+from send2trash import send2trash
 from sshconf import read_ssh_config
 
+from sshd_cli.controllers.rsa import generate_rsa_key_pair
 from sshd_cli.models.exceptions import AliasAlreadyExists, InvalidAlias
-from sshd_cli.vars import CLI_PREFIX, SSH_CONFIG, SSH_DIR, SSH_PUB
+from sshd_cli.utils.logger import log
+from sshd_cli.vars import CLI_PREFIX, SSH_CONFIG, SSH_DIR, SSH_KEY, SSH_PUB
 
 
 class SSH:
@@ -36,10 +39,17 @@ class SSH:
             self._conf.remove(alias)
             self._write()
         else:
-            InvalidAlias.err_msg()
+            InvalidAlias.err_msg(alias=alias)
 
     def exists(self, alias: str) -> bool:
         return alias in self._conf.hosts()
+
+    def connect(self, alias: str = ""):
+        self = SSH() if self is None else self
+        if not self.exists(alias):
+            InvalidAlias.err_msg(alias=alias)
+
+        self._check_rsa_keypair()
 
     # private functions
     def _ssh_init(self):
@@ -56,8 +66,8 @@ class SSH:
         self._conf.add(
             host=host,
             before_host=self._first_host(),
-            GSSAPIAuthentication=True,
-            GSSAPIDelegateCredentials=True,
+            GSSAPIAuthentication="yes",
+            GSSAPIDelegateCredentials="yes",
         )
 
     def _add_sshd_cli_config(self):
@@ -66,8 +76,8 @@ class SSH:
         self._conf.add(
             host=host,
             before_host=self._first_host(),
-            IdentityFile=SSH_PUB,
-            IdentitiesOnly=True,
+            IdentityFile=SSH_KEY,
+            IdentitiesOnly="yes",
             StrictHostKeyChecking="accept-new",
             UserKnownHostsFile="/dev/null",
         )
@@ -94,3 +104,19 @@ class SSH:
             )
         )
         SSH_CONFIG.write_text(formatted_data)
+
+    def _check_rsa_keypair(self):
+        if not any((SSH_KEY.exists(), SSH_PUB.exists())):
+            log.error("RSA key pair missing. Generating a new pair...")
+            [send2trash(file) for file in (SSH_KEY, SSH_PUB) if file.exists()]
+            generate_rsa_key_pair()
+            log.info(
+                f"New RSA key pair generated at: [bright_blue]{SSH_KEY}[/] and [bright_blue]{SSH_PUB}[/]."
+            )
+        else:
+            log.info(
+                f"RSA key pair found at: [bright_blue]{SSH_KEY}[/] and [bright_blue]{SSH_PUB}[/]."
+            )
+
+
+class RemoteSession: ...

@@ -9,6 +9,6 @@ CLI_PREFIX  = "sshd_cli"
 
 SSH_DIR     = Path("~/.ssh").expanduser()
 SSH_CONFIG  = SSH_DIR / "config"
-SSH_KEY     = SSH_CONFIG / f"{CLI_PREFIX}_rsa"
-SSH_PUB     = SSH_CONFIG / f"{CLI_PREFIX}_rsa.pub"
-
+SSH_KEY     = SSH_DIR / f"{CLI_PREFIX}_rsa"
+SSH_PUB     = SSH_DIR / f"{CLI_PREFIX}_rsa.pub"
+SSH_COMMENT = "### Auto generated key by sshd-cli ###"

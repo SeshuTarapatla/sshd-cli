@@ -11,7 +11,7 @@ console = Console()
 basicConfig(
     level=INFO,
     format="| %(message)s",
-    handlers=[RichHandler(console=console, omit_repeated_times=False)],
+    handlers=[RichHandler(console=console, omit_repeated_times=False, markup=True)],
 )
 
 

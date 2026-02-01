@@ -27,6 +27,7 @@ class Ansi(StrEnum):
 
     # most used combos
     BOLD_RED = f"{BOLD}{RED}"
+    BOLD_BLUE = f"{BOLD}{BLUE}"
     BOLD_CYAN = f"{BOLD}{CYAN}"
 
 

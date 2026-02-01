@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 from shutil import copy2, move
 from site import USER_SITE
+from subprocess import run
 from sys import argv
 from typing import Literal
 
@@ -95,15 +96,14 @@ def add(
     ),
 ):
     ssh = SSH()
-    # Interactive Mode --------------------------------------------------------------------------------
     if not hostname:
         Help.interactive_mode()
-        hostname = input(f" Enter the host address: {Ansi.BOLD_CYAN}")
+        hostname = input(f" Enter the host address: {Ansi.BOLD_CYAN}").strip()
         InvalidHostAddress.err_msg(host=hostname) if not valid_host(hostname) else None
         alias = hostname.split(".")[0].lower()
         alias = input(
             f"{Ansi.RESET} Enter a short alias for the host (defaults to {Ansi.BOLD_CYAN}{alias}{Ansi.RESET}): {Ansi.BOLD_CYAN}"
-        )
+        ).strip()
         if ssh.exists(alias):
             resp = (
                 input(
@@ -118,7 +118,6 @@ def add(
                 overwrite = True
             elif resp == "n":
                 overwrite = False
-    # -------------------------------------------------------------------------------------------------
     if not alias:
         alias = hostname.split(".")[0].lower()
         info(f"Alias not passed, defaulting to: [bold cyan]{alias}[/]")
@@ -132,7 +131,7 @@ def remove(alias: str = Argument("", help="Alias of the host to remove.")):
     if not alias:
         Help.interactive_mode()
         list_(output="table")
-        alias = input(f"Please enter the alias of the host to remove: {Ansi.BOLD_RED}")
+        alias = input(f"Please enter the alias of the host to remove: {Ansi.BOLD_RED}").strip()
     with SSH() as ssh:
         ssh.remove(alias)
     info(f"Host with alias '{alias}' removed successfully.")
@@ -196,7 +195,15 @@ def connect(
     alias: str = Argument("", help="Alias of the host to connect."),
     ssh: bool = Option(False, "-s", "--ssh", help="Connect in terminal ssh mode."),
 ):
-    ic(alias, ssh)
+    if not alias:
+        Help.interactive_mode()
+        list_(output="table")
+        alias = input(f"Please enter an host alias to start remote session: {Ansi.BOLD_BLUE}").strip()
+    if ssh:
+        run(["ssh", alias])
+    else:
+        with SSH() as ssh_:
+            ssh_.connect(alias)
 
 
 @app.command(name="kill", rich_help_panel=Panels.SESSION, **Help.kill_command)
