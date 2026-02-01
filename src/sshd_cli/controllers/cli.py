@@ -71,6 +71,11 @@ class Help:
         "Install [bright_yellow]sshd-cli[/] as a command line utility."
     )
 
+    @staticmethod
+    def interactive_mode():
+        atexit.register(Ansi.reset)
+        console.print(" [bold bright_black]*** Interactive Mode ***[/]\n")
+
 
 # SERVERS ---------------------------------------------------------------------------------------------
 
@@ -89,11 +94,10 @@ def add(
         False, "-o", "--overwrite", help="Overwrite if the alias exists."
     ),
 ):
-    atexit.register(Ansi.reset)
     ssh = SSH()
     # Interactive Mode --------------------------------------------------------------------------------
     if not hostname:
-        console.print(" [bold bright_black]*** Interactive Mode ***[/]\n")
+        Help.interactive_mode()
         hostname = input(f" Enter the host address: {Ansi.BOLD_CYAN}")
         InvalidHostAddress.err_msg(host=hostname) if not valid_host(hostname) else None
         alias = hostname.split(".")[0].lower()
@@ -125,7 +129,13 @@ def add(
 @app.command(name="remove", rich_help_panel=Panels.SERVER, **Help.remove_command)
 @app.command(name="delete", hidden=True, **Help.remove_command)
 def remove(alias: str = Argument("", help="Alias of the host to remove.")):
-    ic(alias)
+    if not alias:
+        Help.interactive_mode()
+        list_(output="table")
+        alias = input(f"Please enter the alias of the host to remove: {Ansi.BOLD_RED}")
+    with SSH() as ssh:
+        ssh.remove(alias)
+    info(f"Host with alias '{alias}' removed successfully.")
 
 
 @app.command(name="list", rich_help_panel=Panels.SERVER, **Help.list_command)
@@ -140,7 +150,7 @@ def list_(
 ):
     ssh = SSH()
     hosts, configs = zip(*ssh.list())
-    console.print(f"\nTotal Hosts: {len(hosts)}.")
+    console.print(f"Total Hosts: {len(hosts)}.")
     if output == "table":
         from rich.align import Align
         from rich.table import Table

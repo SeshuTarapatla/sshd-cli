@@ -5,13 +5,14 @@ from sshd_cli.utils.logger import error, warn
 
 class ExitCode:
     INVALID_HOST = 1
-    HOST_EXISTS = 2
-    INSTALL_ERROR = 3
-    VIRTUAL_ENV = 4
-    CLI_NOT_FOUND = 5
-    SITE_NOT_FOUND = 6
-    PATH_ISSUE = 7
-    INVALID_RESPONSE = 8
+    ALIAS_EXISTS = 2
+    ALIAS_MISSING = 3
+    INSTALL_ERROR = 4
+    VIRTUAL_ENV = 5
+    CLI_NOT_FOUND = 6
+    SITE_NOT_FOUND = 7
+    PATH_ISSUE = 8
+    INVALID_RESPONSE = 9
 
 
 class CliException(Exception):
@@ -37,11 +38,23 @@ class AliasAlreadyExists(CliException, ValueError):
     @staticmethod
     def err_msg(
         msg: str = "Alias already exists. Use [bright_yellow]-o/--overwrite[/] flag to replace.",
-        code: int = ExitCode.HOST_EXISTS,
+        code: int = ExitCode.ALIAS_EXISTS,
         *,
         alias: str | None = None,
     ) -> NoReturn:
         msg = f"'{alias}' {msg.lower()}" if alias is not None else msg
+        return CliException.err_msg(msg, code)
+
+
+class InvalidAlias(CliException, LookupError):
+    @staticmethod
+    def err_msg(
+        msg: str = "Not a valid alias.",
+        code: int = ExitCode.ALIAS_MISSING,
+        *,
+        alias: str = "",
+    ) -> NoReturn:
+        msg = f"[bold red]{alias}[/] is {msg.lower()}"
         return CliException.err_msg(msg, code)
 
 

@@ -1,6 +1,6 @@
 from sshconf import read_ssh_config
 
-from sshd_cli.models.exceptions import AliasAlreadyExists
+from sshd_cli.models.exceptions import AliasAlreadyExists, InvalidAlias
 from sshd_cli.vars import CLI_PREFIX, SSH_CONFIG, SSH_DIR, SSH_PUB
 
 
@@ -30,6 +30,13 @@ class SSH:
                 AliasAlreadyExists.err_msg(alias=alias)
         self._conf.add(alias, HostName=hostname)
         self._write()
+
+    def remove(self, alias: str):
+        if self.exists(alias):
+            self._conf.remove(alias)
+            self._write()
+        else:
+            InvalidAlias.err_msg()
 
     def exists(self, alias: str) -> bool:
         return alias in self._conf.hosts()
